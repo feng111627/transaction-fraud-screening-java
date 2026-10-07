@@ -6,5 +6,7 @@ package com.github.feng111627.transactionfraudscreeningjava.domain;
 public enum Role {
     ANALYST,
     SUPERVISOR,
-    AUDITOR
+    AUDITOR,
+    /** 策略运营管理员：发布策略版本、影响预演、名单增删。 */
+    POLICY_ADMIN
 }

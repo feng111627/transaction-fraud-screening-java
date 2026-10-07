@@ -82,7 +82,7 @@ class ApiIntegrationTest {
     void reviewFlowOverHttp() throws Exception {
         mockMvc.perform(post("/api/watchlist/API-A3")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"reason\":\"涉诈账户\"}"))
+                        .content("{\"operator\":\"ops1\",\"role\":\"POLICY_ADMIN\",\"reason\":\"涉诈账户\"}"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/transactions")
@@ -114,7 +114,8 @@ class ApiIntegrationTest {
     @DisplayName("越权复核返回 403，非法状态迁移返回 409")
     void unauthorizedAndIllegalTransitionOverHttp() throws Exception {
         mockMvc.perform(post("/api/watchlist/API-A4")
-                .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"测试\"}"));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"operator\":\"ops1\",\"role\":\"POLICY_ADMIN\",\"reason\":\"测试\"}"));
         mockMvc.perform(post("/api/transactions")
                 .contentType(MediaType.APPLICATION_JSON).content(txJson("API-T6", "API-A4", "100")));
         MvcResult list = mockMvc.perform(get("/api/reviews")).andReturn();
