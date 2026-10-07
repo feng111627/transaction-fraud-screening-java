@@ -97,6 +97,9 @@ public class ReviewService {
         if (role == Role.AUDITOR) {
             return "AUDITOR 为只读角色，不能执行复核操作";
         }
+        if (role == Role.POLICY_ADMIN) {
+            return "POLICY_ADMIN 为策略管理角色，不能执行复核操作";
+        }
         ReviewStatus target = action.targetStatus();
         if (target == ReviewStatus.CLOSED && role != Role.SUPERVISOR) {
             return "归档(CLOSED)仅 SUPERVISOR 可执行";

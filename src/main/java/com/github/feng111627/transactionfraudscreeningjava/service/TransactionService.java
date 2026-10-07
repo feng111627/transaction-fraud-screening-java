@@ -101,12 +101,14 @@ public class TransactionService {
     }
 
     private RiskAssessment assess(Transaction tx) {
+        // 一次判定只取一份策略快照与一份名单快照，全程使用，
+        // 保证发布切换时同一笔交易完整按某一个版本判定，不掺新旧规则。
         RuleConfig cfg = ruleEngine.currentConfig();
         Instant from = tx.occurredAt().minusSeconds(cfg.velocityWindowSeconds());
         long recentCount = transactionStore.countByAccountInWindow(tx.accountId(), from, tx.occurredAt());
-        var watchlistEntry = watchlistStore.find(tx.accountId()).orElse(null);
-        RuleContext context = new RuleContext(tx, recentCount, watchlistEntry);
-        return ruleEngine.assess(context, watchlistStore.version());
+        WatchlistStore.WatchlistSnapshot watchlist = watchlistStore.snapshot(tx.accountId());
+        RuleContext context = new RuleContext(tx, recentCount, watchlist.entry());
+        return ruleEngine.assess(context, cfg, watchlist.version());
     }
 
     private void openReviewCase(Transaction tx, RiskAssessment assessment) {

@@ -31,7 +31,14 @@ public class RiskRuleEngine {
     }
 
     public RiskAssessment assess(RuleContext context, long watchlistVersion) {
-        RuleConfig snapshot = config;
+        return assess(context, config, watchlistVersion);
+    }
+
+    /**
+     * 用调用方给定的配置快照评估：一次判定从头到尾使用同一份配置，
+     * 发布新版本不会把新旧规则掺进同一笔交易的判定里。
+     */
+    public RiskAssessment assess(RuleContext context, RuleConfig snapshot, long watchlistVersion) {
         List<RuleHit> hits = rules.stream()
                 .map(rule -> rule.evaluate(context, snapshot))
                 .flatMap(Optional::stream)
@@ -45,7 +52,11 @@ public class RiskRuleEngine {
                 decision,
                 hits,
                 versionTag,
-                Instant.now());
+                Instant.now(),
+                snapshot.version(),
+                watchlistVersion,
+                context.recentCount(),
+                context.watchlistEntry());
     }
 
     private Decision decide(int totalScore, RuleConfig cfg) {

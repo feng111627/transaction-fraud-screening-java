@@ -18,6 +18,10 @@ public class WatchlistStore {
     public record WatchlistEntry(String accountId, String reason, Instant addedAt) {
     }
 
+    /** 名单状态快照：版本号与命中条目在同一临界区读取，保证二者一致。 */
+    public record WatchlistSnapshot(long version, WatchlistEntry entry) {
+    }
+
     private final Map<String, WatchlistEntry> entries = new ConcurrentHashMap<>();
     private final AtomicLong version = new AtomicLong(0);
 
@@ -25,12 +29,17 @@ public class WatchlistStore {
         return Optional.ofNullable(entries.get(accountId));
     }
 
-    public void add(String accountId, String reason) {
+    /** 原子读取某账户的名单状态与对应版本号，判定快照使用。 */
+    public synchronized WatchlistSnapshot snapshot(String accountId) {
+        return new WatchlistSnapshot(version.get(), entries.get(accountId));
+    }
+
+    public synchronized void add(String accountId, String reason) {
         entries.put(accountId, new WatchlistEntry(accountId, reason, Instant.now()));
         version.incrementAndGet();
     }
 
-    public void remove(String accountId) {
+    public synchronized void remove(String accountId) {
         if (entries.remove(accountId) != null) {
             version.incrementAndGet();
         }
